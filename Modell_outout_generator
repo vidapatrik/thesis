@@ -1,0 +1,96 @@
+install.packages("nfl4th")
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("DescTools")
+install.packages("scales")
+install.packages("tidyverse")
+install.packages("gt")
+install.packages("glue")
+install.packages("ggtext")
+install.packages("ggthemes")
+install.packages("magick")
+install.packages("cowplot")
+install.packages("nflplotR")
+install.packages("patchwork")
+
+library(nfl4th)
+library(tidyverse)
+library(ggplot2)
+library(ggtext)
+library(DescTools)
+library(ggthemes)
+library(gt)
+library(magick)
+library(cowplot)
+library(nflplotR)
+library(patchwork)
+
+
+theme_ben <- theme_fivethirtyeight() +
+  theme(
+    legend.position = "none",
+    plot.title = element_markdown(size = 18, hjust = 0.5),
+    plot.subtitle = element_markdown(size = 10, hjust = 0.5),
+    axis.title.x = element_text(size=12, face="bold"),
+    axis.title.y = element_text(size=12, face="bold")
+  )
+
+
+
+add_gt_options <- function(gt_data) {
+  gt_data %>%
+    tab_options(
+      row_group.border.top.width = px(3),
+      row_group.border.top.color = "black",
+      row_group.border.bottom.color = "black",
+      table_body.hlines.color = "white",
+      table.border.top.color = "black",
+      table.border.top.width = px(1),
+      table.border.bottom.color = "white",
+      table.border.bottom.width = px(1),
+      column_labels.border.bottom.color = "black",
+      column_labels.border.bottom.width = px(2),
+      row.striping.background_color = '#FFFFFF',
+      row.striping.include_table_body = TRUE,
+      table.background.color = '#F2F2F2',
+      data_row.padding = gt::px(2),
+      table.font.size = gt::px(16L)
+    ) %>%
+    return()
+}
+
+pbp <- nfl4th::load_4th_pbp(2014:2022, fast = T) %>%
+  filter(down == 4)
+
+pbp %>%
+  dplyr::filter(season == 2022, !is.na(go_boost), !is.na(go)) %>%
+  dplyr::mutate(type = dplyr::case_when(
+    go_boost >= 4 ~ "Egyértelműen neki kell menni",
+    go_boost > 1 & go_boost < 4 ~ "Valószínűleg neki kell menni",
+    go_boost >= -1 & go_boost <= 1 ~ "Egyik opció sem egyértelműen jobb",
+    go_boost < -1 & go_boost > -4 ~ "Valószínűleg rúgni kell",
+    go_boost <= -4 ~ "Egyértelműen rúgni kell"
+  )) %>%
+  dplyr::group_by(type) %>%
+  dplyr::summarize(go = mean(go), n = dplyr::n()) %>%
+  dplyr::ungroup() %>%
+  dplyr::arrange(-go) %>%
+  gt::gt() %>%
+  gt::cols_label(
+    type = "Ajánlás",
+    go = "Neki menés  %",
+    n = "Játékok (db)"
+  ) %>%
+  gt::tab_style(
+    style = gt::cell_text(color = "black", weight = "bold"),
+    locations = list(
+      gt::cells_column_labels(dplyr::everything())
+    )
+  ) %>% 
+  add_gt_options() %>%
+  gt::fmt_number(columns = dplyr::vars(go), decimals = 0) %>%
+  gt::cols_align(
+    columns = 2:3, align = "center"
+  ) %>% 
+  gt::tab_header(title = "NFL csapatok döntéshozatala a modell ajánlása alapján, 2022") %>%
+  gt::tab_source_note(gt::md('**Jegyzet**: "Egyértelműen" legalább 4 százalékpont előny, ,<br> "Valószínűleg" 1-4 százalékpont'))
