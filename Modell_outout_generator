@@ -94,3 +94,67 @@ pbp %>%
   ) %>% 
   gt::tab_header(title = "NFL csapatok döntéshozatala a modell ajánlása alapján, 2022") %>%
   gt::tab_source_note(gt::md('**Jegyzet**: "Egyértelműen" legalább 4 százalékpont előny, ,<br> "Valószínűleg" 1-4 százalékpont'))
+#######################################################################################################################################
+pbp %>%
+  filter(
+    season == 2022,
+    go == 100,
+   
+  ) %>%
+  arrange(go_boost) %>%
+  mutate(rank = 1 : n()) %>%
+  head(5) %>%
+  select(rank, posteam, defteam, week, qtr, ydstogo, score_differential, go_boost, desc) %>%
+  gt() %>%
+  cols_label(
+    rank = "", posteam = "O#", defteam = "D#", week = "Játék Hét", qtr = "Qtr",
+    ydstogo = "To Go", score_differential = "Pont Diff", desc = "Játék", go_boost = "WP veszteség"
+  ) %>%
+  tab_style(
+    style = cell_text(color = "black", weight = "bold"),
+    locations = list(cells_column_labels(everything()))
+  ) %>% 
+  text_transform(
+    locations = cells_body(vars(posteam, defteam)),
+    fn = function(x) web_image(url = paste0('https://a.espncdn.com/i/teamlogos/nfl/500/',x,'.png'))
+  ) %>% 
+  cols_width(everything() ~ px(400)) %>% 
+  cols_width(
+    vars(rank) ~ px(30), vars(go_boost) ~ px(80),
+    vars(posteam, defteam, week, score_differential, qtr, ydstogo) ~ px(50)
+  ) %>% 
+  add_gt_options() %>%
+  fmt_number(columns = vars(go_boost), decimals = 1) %>%
+  cols_align(columns = 1:8, align = "center") %>% 
+  tab_header(title = "Legfurcsább 4. kísérletes 'Go for it' döntések, 2022")pbp %>%
+  filter(
+    season == 2022,
+    go == 100,
+   
+  ) %>%
+  arrange(go_boost) %>%
+  mutate(rank = 1 : n()) %>%
+  head(5) %>%
+  select(rank, posteam, defteam, week, qtr, ydstogo, score_differential, go_boost, desc) %>%
+  gt() %>%
+  cols_label(
+    rank = "", posteam = "O#", defteam = "D#", week = "Játék Hét", qtr = "Qtr",
+    ydstogo = "To Go", score_differential = "Pont Diff", desc = "Játék", go_boost = "WP veszteség"
+  ) %>%
+  tab_style(
+    style = cell_text(color = "black", weight = "bold"),
+    locations = list(cells_column_labels(everything()))
+  ) %>% 
+  text_transform(
+    locations = cells_body(vars(posteam, defteam)),
+    fn = function(x) web_image(url = paste0('https://a.espncdn.com/i/teamlogos/nfl/500/',x,'.png'))
+  ) %>% 
+  cols_width(everything() ~ px(400)) %>% 
+  cols_width(
+    vars(rank) ~ px(30), vars(go_boost) ~ px(80),
+    vars(posteam, defteam, week, score_differential, qtr, ydstogo) ~ px(50)
+  ) %>% 
+  add_gt_options() %>%
+  fmt_number(columns = vars(go_boost), decimals = 1) %>%
+  cols_align(columns = 1:8, align = "center") %>% 
+  tab_header(title = "Legfurcsább 4. kísérletes 'Go for it' döntések, 2022")
